@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Exposés M1 IA et chimie</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Fraunces:opsz,wght@9..144,600&display=swap">
+<style>
+body{margin:0}[hidden]{display:none!important}
+
+/* Registre de laboratoire : tableau dense, une couleur par spécialité, la ligne passe au vert une fois affectée */
+:root{
+  --bg:#f6f7f5; --surface:#ffffff; --fg:#1c2421; --muted:#5e6b66; --line:#dde2df;
+  --accent:#0f6e5c;
+  --cat:#b4541c; --mac:#6a4bb0; --mat:#1f6fa8; --deb:#7a6a2a;
+  --done-bg:#e3f3e6; --done-fg:#1e6b32; --done-line:#a9d7b3;
+  --input:#fbfcfb;
+  --f-display:"Fraunces",Georgia,serif; --f-body:"IBM Plex Sans",system-ui,sans-serif; --f-mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121715; --surface:#1a201e; --fg:#e4ebe8; --muted:#97a6a0; --line:#2c3532;
+  --accent:#4cc2a6; --cat:#ef9a63; --mac:#ad95ef; --mat:#6fb4e6; --deb:#d4c27a;
+  --done-bg:#183324; --done-fg:#8fdba3; --done-line:#2f6a45; --input:#151b19; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121715; --surface:#1a201e; --fg:#e4ebe8; --muted:#97a6a0; --line:#2c3532;
+  --accent:#4cc2a6; --cat:#ef9a63; --mac:#ad95ef; --mat:#6fb4e6; --deb:#d4c27a;
+  --done-bg:#183324; --done-fg:#8fdba3; --done-line:#2f6a45; --input:#151b19; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:14px;line-height:1.45}
+.wrap{max-width:1280px;margin:0 auto;padding-block:28px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:18px}
+h1{font-family:var(--f-display);font-weight:600;font-size:clamp(22px,3vw,30px);margin:0;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:70ch}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:5px 12px;font:inherit;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.chip:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.right{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.count{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.count b{color:var(--done-fg)}
+.btn{background:var(--accent);color:var(--surface);border:0;border-radius:6px;padding:7px 14px;font:inherit;font-weight:500;cursor:pointer}
+.legend{display:flex;flex-wrap:wrap;gap:14px;color:var(--muted);font-size:12.5px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:10px;height:10px;border-radius:2px;display:inline-block}
+.tablebox{overflow-x:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:980px}
+th,td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;background:var(--surface);position:sticky;top:0}
+td.n{font-family:var(--f-mono);font-variant-numeric:tabular-nums;color:var(--muted);width:36px}
+td.dom{width:118px;font-size:12.5px;font-weight:600}
+td.dom i{font-style:normal;display:inline-block;border-left:3px solid currentColor;padding-left:7px}
+.d-cat{color:var(--cat)} .d-mac{color:var(--mac)} .d-mat{color:var(--mat)} .d-deb{color:var(--deb)}
+td.t{min-width:320px} td.t strong{font-weight:500;display:block} td.t small{color:var(--muted);display:block;margin-top:3px;font-size:12px}
+td.fmt{width:90px;font-size:12.5px;color:var(--muted)}
+td.who{width:230px} td.when{width:150px} td.st{width:110px}
+input[type=text],input[type=date]{width:100%;box-sizing:border-box;font:inherit;color:var(--fg);background:var(--input);border:1px solid var(--line);border-radius:5px;padding:6px 8px}
+.pill{display:inline-block;font-size:12px;border-radius:999px;padding:2px 9px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+tr.done td{background:var(--done-bg)}
+tr.done td.n{color:var(--done-fg)}
+tr.done .pill{background:var(--done-fg);border-color:var(--done-fg);color:var(--done-bg);font-weight:600}
+tr.done input{border-color:var(--done-line)}
+tr{transition:background-color .25s}
+.clear{background:none;border:0;color:var(--muted);font:inherit;font-size:12px;cursor:pointer;text-decoration:underline;padding:4px 0 0;display:block}
+.note{color:var(--muted);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){tr{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Exposés M1 : IA en catalyse, chimie macromoléculaire et matériaux</h1>
+    <p class="sub">25 sujets d'actualité, exposés de 15 minutes en binôme ou trinôme. Saisir les noms du groupe : la ligne passe au vert dès l'affectation et l'enregistrement est partagé avec tous ceux qui ouvrent la page.</p>
+  </header>
+
+  <div class="bar">
+    <div class="chips" role="group" aria-label="Filtrer">
+      <button class="chip" data-f="all" aria-pressed="true">Tous</button>
+      <button class="chip" data-f="cat" aria-pressed="false">Catalyse</button>
+      <button class="chip" data-f="mac" aria-pressed="false">Macromoléculaire</button>
+      <button class="chip" data-f="mat" aria-pressed="false">Matériaux</button>
+      <button class="chip" data-f="deb" aria-pressed="false">Débats</button>
+      <button class="chip" data-f="free" aria-pressed="false">Non affectés</button>
+    </div>
+    <div class="right">
+      <span class="count" id="count">0 / 25 affectés</span>
+      <button class="btn" id="export">Exporter pour Excel</button>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i class="sw" style="background:var(--cat)"></i>Catalyse</span>
+    <span><i class="sw" style="background:var(--mac)"></i>Chimie macromoléculaire</span>
+    <span><i class="sw" style="background:var(--mat)"></i>Matériaux</span>
+    <span><i class="sw" style="background:var(--deb)"></i>Débats transversaux</span>
+    <span><i class="sw" style="background:var(--done-fg)"></i>Sujet affecté</span>
+  </div>
+
+  <div class="tablebox">
+    <table>
+      <thead><tr><th>N°</th><th>Domaine</th><th>Titre de l'exposé</th><th>Équipe</th><th>Étudiants affectés</th><th>Date de passage</th><th>Statut</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <p class="note" id="mode">Connexion à l'enregistrement partagé…</p>
+</div>
+
+<script>
+const DOM={cat:"Catalyse",mac:"Macromoléculaire",mat:"Matériaux",deb:"Débat"};
+const S=[
+["cat","Électrolyse PEM sans iridium : découverte par IA de catalyseurs à base de palladium pour l'évolution de l'oxygène en milieu acide","Jenewein et al., arXiv 2609.30133 (2026)","Trinôme · pitch"],
+["cat","Apprentissage profond inter-familles : prédiction de l'activité OER de catalyseurs mono-atomiques supportés sur pérovskites","Nature Materials 2026, doi 10.1038/s41563-026-02622-6","Binôme"],
+["cat","Réduction électrochimique du CO2 en éthylène : criblage d'alliages Cu–Al par apprentissage actif","Zhong et al., Nature 2020, 581, 178","Binôme"],
+["cat","OMol25 et UMA : les potentiels interatomiques universels peuvent-ils remplacer la DFT dans l'étude des mécanismes catalytiques ?","OMol25, arXiv 2505.08762 (2025)","Trinôme · débat"],
+["cat","Enzymes conçues de novo par modèles de diffusion : vers une biocatalyse sur mesure pour la chimie verte","Watson et al., Nature 2023, 620, 1089","Trinôme"],
+["cat","Agents chimiques autonomes : planification et optimisation par Coscientist de couplages de Suzuki catalysés au palladium","Boiko et al., Nature 2023, 624, 570","Binôme · procès"],
+["mac","Mécanophores ferrocéniques sélectionnés par réseau de neurones : un réticulant faible qui quadruple la résistance au déchirement d'un polyacrylate","Kevlishvili et al., ACS Cent. Sci. 2025","Binôme"],
+["mac","FAST-PETase : ingénierie enzymatique guidée par apprentissage pour la dépolymérisation du PET","Lu et al., Nature 2022, 604, 662","Trinôme · pitch"],
+["mac","polyBERT : prédiction de la Tg, du module et de la perméabilité des polymères par un modèle de langage chimique","Kuenneth et Ramprasad, Nat. Commun. 2023, 14, 4099","Binôme"],
+["mac","BigSMILES et polydispersité : représenter une macromolécule pour l'apprentissage automatique","Lin et al., ACS Cent. Sci. 2019, 5, 1523","Binôme · débat"],
+["mac","Polyesters biodégradables : relation structure–biodégradabilité établie par criblage haut débit et apprentissage automatique","Fransen et al., PNAS 2023, 120, e2220021120","Trinôme"],
+["mac","Identification des microplastiques par spectroscopie Raman et FTIR couplée aux réseaux de neurones convolutifs","Mots-clés : microplastics, Raman, FTIR, deep learning","Trinôme"],
+["mat","MatterGen : génération par diffusion de cristaux inorganiques à propriétés ciblées","Zeni et al., Nature 2025, 639, 624","Binôme"],
+["mat","GNoME et 2,2 millions de cristaux prédits : découverte réelle ou inflation de structures ?","Merchant et al., Nature 2023, 624, 80","Trinôme · procès"],
+["mat","A-Lab, laboratoire autonome de synthèse inorganique : résultats et controverse sur l'identification des phases par DRX","Szymanski et al., Nature 2023, 624, 86","Trinôme · débat"],
+["mat","MOF, prix Nobel 2025 : prédiction des conditions de synthèse par IA et captage de l'eau atmosphérique en zone aride","Zheng et al., JACS 2023, 145, 18048","Trinôme · pitch"],
+["mat","OpenDAC : criblage de MOF par apprentissage automatique pour le captage direct du CO2 atmosphérique","Sriram et al., ACS Cent. Sci. 2024, 10, 923","Binôme"],
+["mat","Électrolyte solide Na–Li retenu parmi 32 millions de candidats : criblage par IA pour des batteries plus pauvres en lithium","Chen et al., arXiv 2024 (Microsoft et PNNL)","Binôme · pitch"],
+["mat","Stabilité des cellules solaires pérovskites en climat saharien : apport des laboratoires autonomes et de l'apprentissage automatique","Mots-clés : perovskite stability, machine learning","Trinôme · débat"],
+["mat","Membranes polyamides d'osmose inverse : prédiction de la perméabilité et de la rétention de sel par IA pour le dessalement","Mots-clés : desalination membrane, machine learning","Binôme"],
+["deb","Retrait de l'étude « IA et découverte de matériaux » par le MIT (2025) : intégrité scientifique et prépublications non relues","Déclaration du MIT, mai 2025","Trinôme · procès"],
+["deb","ChemBench : performances et limites des grands modèles de langage face aux chimistes","Mirza et al., Nat. Chem. 2025","Binôme"],
+["deb","Nobels de chimie 2024 et 2025 : protéines conçues par IA et MOF, deux voies de la découverte","nobelprize.org","Trinôme · débat"],
+["deb","Double usage des modèles de conception moléculaire : risques de détournement vers des agents toxiques et garde-fous","Urbina et al., Nat. Mach. Intell. 2022, 4, 189","Binôme · débat"],
+["deb","Empreinte carbone du calcul : l'IA au service de la chimie verte est-elle elle-même verte ?","Mots-clés : green AI, carbon footprint, computational chemistry","Trinôme · procès"]
+];
+let state={}, filter="all", col=null, LS="exposes-m1-affectations";
+const tb=document.getElementById("rows");
+
+function render(){
+  tb.textContent="";
+  let done=0;
+  S.forEach((s,i)=>{
+    const id=String(i+1).padStart(2,"0"), a=state[id]||{}, ok=!!(a.etudiants&&a.etudiants.trim());
+    if(ok) done++;
+    if(filter==="free"&&ok) return;
+    if(filter!=="all"&&filter!=="free"&&s[0]!==filter) return;
+    const tr=document.createElement("tr"); if(ok) tr.className="done";
+    tr.innerHTML=`<td class="n">${i+1}</td><td class="dom d-${s[0]}"><i>${DOM[s[0]]}</i></td>
+<td class="t"><strong></strong><small></small></td><td class="fmt"></td>
+<td class="who"><input type="text" id="e${id}" placeholder="Noms des étudiants"></td>
+<td class="when"><input type="date" id="d${id}"></td>
+<td class="st"><span class="pill">${ok?"Affecté":"Libre"}</span>${ok?'<button class="clear">Libérer</button>':""}</td>`;
+    tr.querySelector("strong").textContent=s[1];
+    tr.querySelector("small").textContent=s[2];
+    tr.querySelector(".fmt").textContent=s[3];
+    const e=tr.querySelector("#e"+id), d=tr.querySelector("#d"+id);
+    e.value=a.etudiants||""; d.value=a.date||"";
+    e.addEventListener("change",()=>save(id,{etudiants:e.value.trim(),date:d.value}));
+    d.addEventListener("change",()=>save(id,{etudiants:e.value.trim(),date:d.value}));
+    const c=tr.querySelector(".clear"); if(c) c.addEventListener("click",()=>save(id,{etudiants:"",date:""}));
+    tb.appendChild(tr);
+  });
+  document.getElementById("count").innerHTML=`<b>${done}</b> / 25 affectés`;
+}
+async function save(id,v){
+  const prev=state[id]||{};
+  if((prev.etudiants||"")===v.etudiants&&(prev.date||"")===v.date) return;
+  state={...state,[id]:v}; render();
+  if(col){
+    try{ v.etudiants||v.date ? await col.doc(id).set(v) : await col.doc(id).delete(); }
+    catch(err){ document.getElementById("mode").textContent="Modification non enregistrée : vous n'avez pas le droit d'écrire sur cette page. Demandez un accès en modification à l'enseignante."; }
+  } else { try{localStorage.setItem(LS,JSON.stringify(state));}catch(e){} }
+}
+document.querySelectorAll(".chip").forEach(b=>b.addEventListener("click",()=>{
+  filter=b.dataset.f; document.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b)); render();
+}));
+document.getElementById("export").addEventListener("click",async()=>{
+  const q=x=>'"'+String(x||"").replace(/"/g,'""')+'"';
+  const lines=[["N°","Domaine","Titre","Référence","Équipe","Étudiants","Date","Statut"].map(q).join(";")];
+  S.forEach((s,i)=>{const id=String(i+1).padStart(2,"0"),a=state[id]||{};
+    lines.push([i+1,DOM[s[0]],s[1],s[2],s[3],a.etudiants,a.date,a.etudiants?"Affecté":"Libre"].map(q).join(";"));});
+  const csv="﻿"+lines.join("\r\n");
+  const dl=window.claude?await claude.use("downloads"):null;
+  if(dl){ try{await dl.save({filename:"affectation_exposes_M1.csv",data:new Blob([csv],{type:"text/csv"})});}catch(e){} }
+  else { const a=document.createElement("a"); a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="affectation_exposes_M1.csv"; document.body.appendChild(a); a.click(); a.remove(); }
+});
+
+try{ state=JSON.parse(localStorage.getItem(LS)||"{}"); }catch(e){ state={}; }
+render();
+(async()=>{
+  const mode=document.getElementById("mode");
+  const db=window.claude?await claude.use("db"):null;
+  if(!db){ mode.textContent="Version en ligne : les affectations saisies ici restent dans votre navigateur. Utilisez « Exporter pour Excel » pour les enregistrer."; return; }
+  col=db.collection("affectations");
+  const t=setTimeout(()=>{mode.textContent="Chargement plus long que prévu ; les données s'afficheront dès leur arrivée.";},10000);
+  col.onSnapshot(snap=>{
+    clearTimeout(t);
+    const s={}; snap.docs.forEach(doc=>{const v=doc.data(); if(v) s[doc.id]={etudiants:v.etudiants||"",date:v.date||""};});
+    state=s; render();
+    mode.textContent="Enregistrement partagé actif : chaque affectation est visible par toutes les personnes qui ouvrent ce lien.";
+  },()=>{clearTimeout(t); mode.textContent="Enregistrement partagé indisponible pour le moment.";});
+})();
+</script>
+</body>
+</html>
